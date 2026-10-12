@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zoom Lighting Wheel v2</title>
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+  <style>
+    :root, [data-theme="dark"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem;
+      --color-surface: rgba(17,16,14,0.56); --color-border: rgba(255,255,255,0.12); --color-text: #f8f2e9;
+      --color-text-muted: rgba(248,242,233,0.74); --color-primary: #f1c181;
+      --radius-lg: 1.125rem; --radius-xl: 1.5rem; --radius-full: 999px;
+      --shadow-lg: 0 24px 80px rgba(0,0,0,.34);
+      --font-body: 'Satoshi', Inter, sans-serif; --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
+      --bg-color: #FFF3DB; --text-on-bg: #1d1812;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);color:var(--text-on-bg);background:var(--bg-color);transition:background-color .18s linear,color .18s linear;overflow:hidden}
+    button,input{font:inherit;color:inherit} button{cursor:pointer;background:none;border:none}
+    :focus-visible{outline:2px solid rgba(255,255,255,.85);outline-offset:3px}
+    .scrim{position:fixed;inset:0;background:radial-gradient(circle at 50% 8%, rgba(255,255,255,.22), transparent 22%),linear-gradient(180deg, rgba(255,255,255,.08), transparent 30%, rgba(0,0,0,.1) 100%);pointer-events:none}
+    .app{position:relative;min-height:100dvh;display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:var(--space-6);padding:var(--space-5)}
+    .panel{background:var(--color-surface);border:1px solid var(--color-border);backdrop-filter:blur(18px);color:var(--color-text);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg)}
+    .control-panel{padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-5);align-self:start;max-height:calc(100dvh - 2.5rem);overflow:auto}
+    .brand{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4)} .brand-left{display:flex;align-items:center;gap:var(--space-3)}
+    .logo{width:2.5rem;height:2.5rem;border-radius:.8rem;background:rgba(255,255,255,.1);display:grid;place-items:center;border:1px solid rgba(255,255,255,.1)}
+    h1{font-family:var(--font-display);font-size:var(--text-xl);line-height:1.02;max-width:10ch}
+    .muted{color:var(--color-text-muted)} .tiny{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.14em;color:var(--color-primary);font-weight:700}
+    .picker-frame{display:grid;place-items:center;padding:var(--space-3);background:rgba(255,255,255,.04);border-radius:var(--radius-lg);border:1px solid rgba(255,255,255,.06)}
+    .sliders{display:grid;gap:var(--space-4)} .control label{display:flex;justify-content:space-between;gap:var(--space-3);font-size:var(--text-sm);font-weight:700;margin-bottom:var(--space-2)} .control span:last-child{color:var(--color-text-muted);font-weight:500}
+    input[type="range"]{appearance:none;width:100%;height:12px;border-radius:999px;background:rgba(255,255,255,.16)}
+    input[type="range"]::-webkit-slider-thumb{appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.08);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+    .presets,.readout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+    .preset,.card{padding:var(--space-4);border-radius:var(--radius-lg);text-align:left;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);display:grid;gap:var(--space-2)}
+    .preset-name{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-sm);font-weight:700} .dot{width:12px;height:12px;border-radius:50%;background:var(--swatch)}
+    .toolbar{display:flex;flex-wrap:wrap;gap:var(--space-3)} .btn{min-height:44px;padding:.8rem 1rem;border-radius:var(--radius-full);font-size:var(--text-sm);font-weight:700;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--color-text)} .btn-primary{background:rgba(255,255,255,.14)}
+    .card strong{display:block;font-size:var(--text-sm);margin-bottom:var(--space-1)} .card span{font-size:var(--text-sm);color:var(--color-text-muted);word-break:break-word}
+    .stage{position:relative;border-radius:var(--radius-xl);min-height:calc(100dvh - 2.5rem);display:flex;align-items:flex-end;justify-content:flex-end;padding:var(--space-5)}
+    .floating-note{max-width:360px;padding:var(--space-4);border-radius:var(--radius-lg);background:rgba(0,0,0,.18);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.92)} .floating-note p{font-size:var(--text-sm);color:rgba(255,255,255,.82)}
+    .hide-ui .control-panel,.hide-ui .floating-note{opacity:0;pointer-events:none;transform:translateY(10px)} .control-panel,.floating-note{transition:opacity .2s ease, transform .2s ease}
+    .edge-reveal{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:20;min-width:22px;min-height:120px;padding:.85rem .35rem;border-radius:0 var(--radius-lg) var(--radius-lg) 0;background:rgba(20,18,15,.44);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(12px);color:#fff;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease, background .2s ease}
+    .edge-reveal span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:var(--text-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:rgba(255,255,255,.88)}
+    .hide-ui .edge-reveal{opacity:1;pointer-events:auto}
+    .hint-toast{position:fixed;left:50%;bottom:1.25rem;transform:translateX(-50%) translateY(10px);z-index:25;padding:.85rem 1rem;border-radius:var(--radius-full);background:rgba(20,18,15,.74);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:var(--text-sm);opacity:0;pointer-events:none;transition:opacity .2s ease, transform .2s ease}
+    .hint-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media (max-width:920px){body{overflow:auto}.app{grid-template-columns:1fr;min-height:100dvh}.stage{min-height:38vh}.control-panel{max-height:none}}
+    @media (max-width:560px){.app{padding:var(--space-3)}.presets,.readout{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="scrim"></div>
+  <main class="app" id="appRoot">
+    <section class="panel control-panel" aria-label="Lighting controls">
+      <div class="brand">
+        <div class="brand-left">
+          <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"></path><path d="M8.8 7.5 12 10.7l3.2-3.2"></path><path d="M6 13.5c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2 0 3.3-2.7 6-6 6s-6-2.7-6-6Z"></path></svg></div>
+          <div><div class="tiny">Zoom fill light</div><h1>Color wheel screen light</h1></div>
+        </div>
+      </div>
+      <p class="muted">The whole page becomes your light source. Move the color wheel, use presets, and bookmark any setup through the URL.</p>
+      <div class="picker-frame"><div id="picker" aria-label="Color wheel"></div></div>
+      <div class="sliders">
+        <div class="control"><label for="brightness"><span>Brightness</span><span id="brightnessValue">96%</span></label><input id="brightness" type="range" min="20" max="100" value="96" /></div>
+        <div class="control"><label for="warmth"><span>Warmth bias</span><span id="warmthValue">58%</span></label><input id="warmth" type="range" min="0" max="100" value="58" /></div>
+      </div>
+      <div><div class="tiny" style="margin-bottom:var(--space-3)">Presets</div>
+        <div class="presets">
+          <button class="preset" data-name="Warm Zoom" data-hex="#FFF1D6" data-b="96" data-w="62" style="--swatch:#FFF1D6"><span class="preset-name"><span class="dot"></span>Warm Zoom</span><span class="muted" style="font-size:var(--text-sm)">Soft flattering warm white.</span></button>
+          <button class="preset" data-name="Cool Focus" data-hex="#EAF4FF" data-b="100" data-w="22" style="--swatch:#EAF4FF"><span class="preset-name"><span class="dot"></span>Cool Focus</span><span class="muted" style="font-size:var(--text-sm)">Sharper, cleaner daylight look.</span></button>
+          <button class="preset" data-name="Sunrise" data-hex="#FFD8B0" data-b="92" data-w="82" style="--swatch:#FFD8B0"><span class="preset-name"><span class="dot"></span>Sunrise</span><span class="muted" style="font-size:var(--text-sm)">Peach warmth with gentler intensity.</span></button>
+          <button class="preset" data-name="Neutral Fill" data-hex="#F9F6EF" data-b="98" data-w="48" style="--swatch:#F9F6EF"><span class="preset-name"><span class="dot"></span>Neutral Fill</span><span class="muted" style="font-size:var(--text-sm)">Balanced white for consistency.</span></button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-primary" id="copyUrl">Copy bookmark URL</button>
+        <button class="btn" id="toggleUi">Hide controls</button>
+        <button class="btn" id="resetBtn">Reset</button>
+      </div>
+      <div class="readout">
+        <div class="card"><strong>Color</strong><span id="hexReadout">#FFF1D6</span></div>
+        <div class="card"><strong>Bookmark state</strong><span id="urlReadout">#c=FFF1D6&b=96&w=58</span></div>
+      </div>
+    </section>
+    <section class="stage" aria-hidden="true">
+      <div class="floating-note"><strong style="display:block; margin-bottom:var(--space-2);">Fullscreen tip</strong><p>After choosing a color, press F11 for a cleaner light panel. Use the Hide controls button when you want the screen to act mostly as the lamp.</p></div>
+    </section>
+  </main>
+  <button class="edge-reveal" id="edgeReveal" type="button" aria-label="Show controls"><span>Controls</span></button>
+  <div class="hint-toast" id="hintToast" role="status" aria-live="polite">Controls hidden. Press C, Escape, or tap the edge tab.</div>
+  <script>
+    const picker = new iro.ColorPicker('#picker', { width: 280, color: '#FFF1D6', borderWidth: 2, borderColor: 'rgba(255,255,255,0.9)', layout: [{ component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } }] });
+    const brightness = document.getElementById('brightness');
+    const warmth = document.getElementById('warmth');
+    const brightnessValue = document.getElementById('brightnessValue');
+    const warmthValue = document.getElementById('warmthValue');
+    const hexReadout = document.getElementById('hexReadout');
+    const urlReadout = document.getElementById('urlReadout');
+    const appRoot = document.getElementById('appRoot');
+    const edgeReveal = document.getElementById('edgeReveal');
+    const hintToast = document.getElementById('hintToast');
+    let toastTimer;
+    function clamp(num, min, max) { return Math.min(max, Math.max(min, num)); }
+    function hexToRgb(hex) { const clean = hex.replace('#',''); const bigint = parseInt(clean, 16); return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 }; }
+    function rgbToHex(r, g, b) { return '#' + [r, g, b].map(v => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('').toUpperCase(); }
+    function mix(a, b, amount) { return a + (b - a) * amount; }
+    function adjustWarmth(hex, warmthPercent, brightnessPercent) { const rgb = hexToRgb(hex); const warm = { r: 255, g: 226, b: 184 }; const cool = { r: 222, g: 238, b: 255 }; const warmthAmount = warmthPercent / 100; const tint = warmthAmount >= 0.5 ? warm : cool; const tintStrength = Math.abs(warmthAmount - 0.5) * 0.32; let r = mix(rgb.r, tint.r, tintStrength); let g = mix(rgb.g, tint.g, tintStrength); let b = mix(rgb.b, tint.b, tintStrength); const brightnessScale = brightnessPercent / 100; r = mix(0, r, brightnessScale); g = mix(0, g, brightnessScale); b = mix(0, b, brightnessScale); return rgbToHex(r, g, b); }
+    function luminance(hex) { const { r, g, b } = hexToRgb(hex); const vals = [r, g, b].map(v => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }); return 0.2126 * vals[0] + 0.7152 * vals[1] + 0.0722 * vals[2]; }
+    function updateURL(hex, b, w) { const state = `#c=${hex.replace('#','')}&b=${b}&w=${w}`; urlReadout.textContent = state; history.replaceState(null, '', state); }
+    function applyBackground() { const pickedHex = picker.color.hexString.toUpperCase(); const finalHex = adjustWarmth(pickedHex, Number(warmth.value), Number(brightness.value)); document.documentElement.style.setProperty('--bg-color', finalHex); document.documentElement.style.setProperty('--text-on-bg', luminance(finalHex) > 0.62 ? '#1C1712' : '#FFF8EE'); hexReadout.textContent = finalHex; brightnessValue.textContent = `${brightness.value}%`; warmthValue.textContent = `${warmth.value}%`; updateURL(pickedHex, brightness.value, warmth.value); }
+    function applyState({hex, b, w}) { if (hex) picker.color.hexString = hex; if (b) brightness.value = clamp(Number(b), 20, 100); if (w) warmth.value = clamp(Number(w), 0, 100); applyBackground(); }
+    function parseHash() { const raw = location.hash.replace(/^#/, ''); const params = new URLSearchParams(raw); const c = params.get('c'); const b = params.get('b'); const w = params.get('w'); if (c && /^[0-9A-Fa-f]{6}$/.test(c)) applyState({ hex: '#' + c.toUpperCase(), b: b || 96, w: w || 58 }); else applyState({ hex: '#FFF1D6', b: 96, w: 58 }); }
+    function showToast(message) { hintToast.textContent = message; hintToast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => hintToast.classList.remove('show'), 2200); }
+    function setControlsHidden(hidden) { appRoot.classList.toggle('hide-ui', hidden); document.getElementById('toggleUi').textContent = hidden ? 'Show controls' : 'Hide controls'; if (hidden) showToast('Controls hidden. Press C, Escape, or tap the edge tab.'); }
+    picker.on('color:change', applyBackground);
+    brightness.addEventListener('input', applyBackground); warmth.addEventListener('input', applyBackground);
+    document.querySelectorAll('.preset').forEach(btn => btn.addEventListener('click', () => applyState({ hex: btn.dataset.hex, b: btn.dataset.b, w: btn.dataset.w })));
+    document.getElementById('copyUrl').addEventListener('click', async () => { try { await navigator.clipboard.writeText(location.href); const btn = document.getElementById('copyUrl'); const original = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => btn.textContent = original, 1200); } catch (e) {} });
+    document.getElementById('toggleUi').addEventListener('click', () => setControlsHidden(!appRoot.classList.contains('hide-ui')));
+    edgeReveal.addEventListener('click', () => setControlsHidden(false));
+    edgeReveal.addEventListener('mouseenter', () => edgeReveal.style.background = 'rgba(20,18,15,.64)');
+    edgeReveal.addEventListener('mouseleave', () => edgeReveal.style.background = 'rgba(20,18,15,.44)');
+    document.getElementById('resetBtn').addEventListener('click', () => applyState({ hex: '#FFF1D6', b: 96, w: 58 }));
+    document.addEventListener('keydown', (event) => { if (event.target && ['INPUT', 'TEXTAREA'].includes(event.target.tagName)) return; if (event.key === 'c' || event.key === 'C') { event.preventDefault(); setControlsHidden(!appRoot.classList.contains('hide-ui')); } if (event.key === 'Escape' && appRoot.classList.contains('hide-ui')) { event.preventDefault(); setControlsHidden(false); } });
+    window.addEventListener('hashchange', parseHash); parseHash();
+  </script>
+</body>
+</html>
